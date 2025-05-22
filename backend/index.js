@@ -15,9 +15,19 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 let clientInstance = null;
 
+let qrCodeImage = '';
+
 create({
   session: 'whatsapp-session',
-  multidevice: true
+  multidevice: true,
+  headless: true,
+  logQR: false,
+  catchQR: (base64Qrimg, asciiQR, attempts, urlCode) => {
+    qrCodeImage = base64Qrimg;
+    console.log('\n========= QR Code (ASCII) =========');
+    console.log(asciiQR);
+    console.log('===================================\n');
+  }
 })
   .then((client) => {
     clientInstance = client;
@@ -28,6 +38,15 @@ create({
     }, 2000);
   })
   .catch((error) => console.error('Ошибка venom-bot:', error));
+
+// 📦 API маршрут для фронта — можно использовать на клиенте
+app.get('/qr', (req, res) => {
+  if (!qrCodeImage) {
+    return res.status(404).json({ error: 'QR-код еще не готов' });
+  }
+  res.json({ qr: qrCodeImage });
+});
+
 
   app.post('/send-message', (req, res) => {
     console.log('Получено тело запроса:', req.body);
