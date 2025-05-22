@@ -74,14 +74,5 @@ app.get('/qr', (req, res) => {
     enqueueMessage.addMessages(messages);
     res.json({ status: 'в очереди', count: messages.length });
   });
-  
-// Сервим статические файлы из frontend/build
-app.use(express.static(path.join(__dirname, '../frontend/build')));
-
-// Для всех остальных маршрутов отправляем index.html
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
-});
-
 app.listen(3000, '0.0.0.0', () => console.log('Сервер на http://0.0.0.0:3000'));
 
