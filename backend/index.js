@@ -3,11 +3,15 @@ import cors from 'cors';
 import { create } from 'venom-bot';
 import { enqueueMessage } from './utils/messageQueue.js';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
 
 dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 let clientInstance = null;
 
@@ -52,5 +56,12 @@ create({
     res.json({ status: 'в очереди', count: messages.length });
   });
   
+// Сервим статические файлы из frontend/build
+app.use(express.static(path.join(__dirname, '../frontend/build')));
 
-app.listen(3001, () => console.log('Сервер на http://localhost:3001'));
+// Для всех остальных маршрутов отправляем index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
+});
+
+app.listen(3001, () => console.log('Сервер на http://localhost:8090'));
