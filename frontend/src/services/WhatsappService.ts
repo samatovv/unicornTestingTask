@@ -13,7 +13,7 @@ export interface MessagePayload {
   export const sendMessages = async (
     messages: MessagePayload[]
   ): Promise<SendMessagesResponse> => {
-    const res = await fetch("http://ec2-51-21-3-88.eu-north-1.compute.amazonaws.com:3000/send-message", {
+    const res = await fetch("http://ec2-51-20-10-167.eu-north-1.compute.amazonaws.com:3000/send-message", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages }),
