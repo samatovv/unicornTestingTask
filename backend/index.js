@@ -6,12 +6,25 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-
 dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/qr') || req.path.startsWith('/send-message')) {
+    return next(); 
+  }
+  res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+});
 
 let clientInstance = null;
 let isClientReady = false;
@@ -36,14 +49,14 @@ create({
     console.log('WhatsApp клиент готов');
 
     setInterval(() => {
-    if (isClientReady) {
-      enqueueMessage.processQueue(clientInstance);
-    }
-  }, 2000);
-})
+      if (isClientReady) {
+        enqueueMessage.processQueue(clientInstance);
+      }
+    }, 2000);
+  })
   .catch((error) => console.error('Ошибка venom-bot:', error));
 
-// 📦 API маршрут для фронта — можно использовать на клиенте
+
 app.get('/qr', (req, res) => {
   if (!qrCodeImage) {
     return res.status(404).json({ error: 'QR-код еще не готов' });
@@ -52,33 +65,37 @@ app.get('/qr', (req, res) => {
 });
 
 
-  app.post('/send-message', (req, res) => {
-    if (!isClientReady) {
-   	 return res.status(503).json({ error: 'WhatsApp клиент ещё не готов. Попробуйте позже.' });
+app.post('/send-message', (req, res) => {
+  if (!isClientReady) {
+    return res.status(503).json({ error: 'WhatsApp клиент ещё не готов. Попробуйте позже.' });
+  }
+
+  const { messages } = req.body;
+
+  if (!clientInstance) {
+    return res.status(500).json({ error: 'Клиент не готов' });
+  }
+
+  if (!messages || !Array.isArray(messages)) {
+    return res.status(400).json({ error: 'Неверный формат данных' });
+  }
+
+  for (const msg of messages) {
+    if (
+      typeof msg.phone !== 'string' ||
+      !msg.phone.match(/^\d+$/) ||
+      typeof msg.message !== 'string' ||
+      msg.message.trim().length === 0
+    ) {
+      return res.status(400).json({ error: 'Неверный формат сообщения' });
     }
-    console.log('Получено тело запроса:', req.body);
-    const { messages } = req.body;
-  
-    if (!clientInstance) {
-      return res.status(500).json({ error: 'Клиент не готов' });
-    }
-  
-    if (!messages || !Array.isArray(messages)) {
-      return res.status(400).json({ error: 'Неверный формат данных' });
-    }
-  
-    for (const msg of messages) {
-      if (
-        typeof msg.phone !== 'string' ||
-        !msg.phone.match(/^\d+$/) || 
-        typeof msg.message !== 'string' ||
-        msg.message.trim().length === 0
-      ) {
-        return res.status(400).json({ error: 'Неверный формат данных' });
-      }
-    }
-  
-    enqueueMessage.addMessages(messages);
-    res.json({ status: 'в очереди', count: messages.length });
-  });
-app.listen(3000, '0.0.0.0', () => console.log('Сервер на http://0.0.0.0:3000'));
+  }
+
+  enqueueMessage.addMessages(messages);
+  res.json({ status: 'в очереди', count: messages.length });
+});
+
+
+app.listen(3000, '0.0.0.0', () => {
+  console.log('Сервер работает на http://0.0.0.0:3000');
+});
