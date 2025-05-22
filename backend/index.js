@@ -83,4 +83,5 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
 });
 
-app.listen(3000, () => console.log('Сервер на http://localhost:3000'));
+app.listen(3000, '0.0.0.0', () => console.log('Сервер на http://0.0.0.0:3000'));
+
