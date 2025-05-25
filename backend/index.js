@@ -220,6 +220,6 @@ app.post('/api/:companyId/send-message', (req, res) => {
 });
 
 
-app.listen(8080, 'localhost', () => {
-  console.log('🚀 Сервер работает на http://localhost:8080');
+app.listen(3000, '0.0.0.0', () => {
+  console.log('Сервер работает на http://0.0.0.0:3000');
 });
