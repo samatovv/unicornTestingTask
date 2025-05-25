@@ -17,7 +17,7 @@ export default function QrCodeViewer({ companyId }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`http://localhost:8080/api/${companyId}/qr`, { cache: 'no-store' });
+      const res = await fetch(`http://ec2-16-171-23-136.eu-north-1.compute.amazonaws.com:3000/api/${companyId}/qr`, { cache: 'no-store' });
       console.log('📡 Ответ от сервера:', res);
   
       if (res.status === 202) {
@@ -58,7 +58,7 @@ export default function QrCodeViewer({ companyId }: Props) {
   const handleResetSession = async () => {
     console.log('🔄 handleResetSession вызван');
     try {
-      const res = await fetch(`http://localhost:8080/api/${companyId}/session`, { method: 'DELETE' });
+      const res = await fetch(`http://ec2-16-171-23-136.eu-north-1.compute.amazonaws.com:3000/api/${companyId}/session`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Ошибка при сбросе сессии');
       await res.json();
   
@@ -74,7 +74,7 @@ export default function QrCodeViewer({ companyId }: Props) {
 
   async function getStatus() {
     try {
-      const res = await fetch(`http://localhost:8080/api/${companyId}/status`, {
+      const res = await fetch(`http://ec2-16-171-23-136.eu-north-1.compute.amazonaws.com:3000/api/${companyId}/status`, {
         cache: 'no-store',
       });
   
