@@ -10,6 +10,7 @@ import {
   Typography,
   FormControl,
   InputLabel,
+  Button,
 } from "@mui/material";
 
 import ClientList from "./components/ClientList";
@@ -18,8 +19,17 @@ import AddClientForm from "./components/AddClientForm";
 import type { Client } from "./types";
 import { sendMessages, type MessagePayload } from "./services/WhatsappService";
 import { templates } from "./utils";
+import QrCodeViewer from "./components/QrCodeViewer";
 
 const App: React.FC = () => {
+  const companies = [
+    { id: "company1", name: "Компания 1" },
+    { id: "company2", name: "Компания 2" },
+    { id: "company3", name: "Компания 3" },
+  ];
+
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+
   const [clients, setClients] = useState<Client[]>([
     { id: 1, name: "Абдурахман", phone: "996708684068", selected: false },
   ]);
@@ -64,7 +74,7 @@ const App: React.FC = () => {
     }));
 
     try {
-      const data = await sendMessages(messages);
+      const data = await sendMessages(selectedCompanyId!, messages);
       alert(`Отправлено в очередь: ${data.count} сообщений`);
       setProgress(100);
     } catch (error: unknown) {
@@ -84,56 +94,92 @@ const App: React.FC = () => {
 
   return (
     <Container maxWidth="sm" sx={{ pt: 4 }}>
-      <Typography variant="h4" fontWeight="bold" mb={3} color="primary">
-        Массовая рассылка WhatsApp
-      </Typography>
-
-      <AddClientForm addClient={addClient} />
-
-      <ClientList clients={clients} toggleClient={toggleClient} />
-
-      <Box mt={2} mb={2}>
-        <TextField
-          label="Пауза между сообщениями (мс)"
-          type="number"
-          fullWidth
-          value={delay}
-          onChange={(e) => setDelay(Number(e.target.value))}
-          disabled={sending}
-        />
-
-        <FormControl fullWidth sx={{ mb: 2, mt: 2 }}>
-          <InputLabel id="template-label">Шаблоны сообщений</InputLabel>
-          <Select
-            labelId="template-label"
-            value={message}
-            label="Шаблоны сообщений"
-            onChange={handleTemplateChange}
-            disabled={sending}
-          >
-            {templates.map((t, i) => (
-              <MenuItem key={i} value={t}>
-                {t}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Box>
-
-      <MessageForm
-        message={message}
-        setMessage={setMessage}
-        handleSend={handleSend}
-        disabled={sending}
-      />
-
-      {sending && (
-        <Box mt={2}>
-          <LinearProgress variant="determinate" value={progress} />
-          <Typography variant="body2" mt={1} textAlign="center">
-            Отправлено: {progress}%
+      {!selectedCompanyId ? (
+        <>
+          <Typography variant="h5" fontWeight="bold" mb={2} color="primary">
+            Выберите компанию для начала
           </Typography>
-        </Box>
+          <FormControl fullWidth>
+            <InputLabel id="company-select-label">Компания</InputLabel>
+            <Select
+              labelId="company-select-label"
+              value=""
+              label="Компания"
+              onChange={(e) => setSelectedCompanyId(e.target.value)}
+            >
+              {companies.map((c) => (
+                <MenuItem key={c.id} value={c.id}>
+                  {c.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </>
+      ) : (
+        <>
+          <QrCodeViewer companyId={selectedCompanyId} />
+
+          <Typography variant="h4" fontWeight="bold" mb={3} color="primary">
+            Массовая рассылка WhatsApp
+          </Typography>
+
+          <Box mb={2}>
+            <Typography variant="subtitle1" color="text.secondary">
+              Компания: {companies.find(c => c.id === selectedCompanyId)?.name}
+            </Typography>
+            <Button variant="text" color="secondary" onClick={() => setSelectedCompanyId(null)}>
+              Сменить компанию
+            </Button>
+          </Box>
+
+          <AddClientForm addClient={addClient} />
+
+          <ClientList clients={clients} toggleClient={toggleClient} />
+
+          <Box mt={2} mb={2}>
+            <TextField
+              label="Пауза между сообщениями (мс)"
+              type="number"
+              fullWidth
+              value={delay}
+              onChange={(e) => setDelay(Number(e.target.value))}
+              disabled={sending}
+            />
+
+            <FormControl fullWidth sx={{ mb: 2, mt: 2 }}>
+              <InputLabel id="template-label">Шаблоны сообщений</InputLabel>
+              <Select
+                labelId="template-label"
+                value={message}
+                label="Шаблоны сообщений"
+                onChange={handleTemplateChange}
+                disabled={sending}
+              >
+                {templates.map((t, i) => (
+                  <MenuItem key={i} value={t}>
+                    {t}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+
+          <MessageForm
+            message={message}
+            setMessage={setMessage}
+            handleSend={handleSend}
+            disabled={sending}
+          />
+
+          {sending && (
+            <Box mt={2}>
+              <LinearProgress variant="determinate" value={progress} />
+              <Typography variant="body2" mt={1} textAlign="center">
+                Отправлено: {progress}%
+              </Typography>
+            </Box>
+          )}
+        </>
       )}
     </Container>
   );

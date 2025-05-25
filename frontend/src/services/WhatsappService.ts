@@ -1,5 +1,3 @@
-// src/services/whatsappService.ts
-
 export interface MessagePayload {
     phone: string;
     message: string;
@@ -7,13 +5,13 @@ export interface MessagePayload {
   
   export interface SendMessagesResponse {
     count: number;
-    // добавь другие поля ответа, если нужно
   }
   
   export const sendMessages = async (
+    companyId: string,
     messages: MessagePayload[]
   ): Promise<SendMessagesResponse> => {
-    const res = await fetch("http://16.171.23.136:3000/send-message", {
+    const res = await fetch(`http://localhost:8080/api/${companyId}/send-message`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages }),
@@ -26,4 +24,5 @@ export interface MessagePayload {
   
     return res.json();
   };
+  
   
