@@ -13,11 +13,10 @@ export default function QrCodeViewer({ companyId }: Props) {
   const [ready, setReady] = useState(false);
 
   const fetchQr = async () => {
-    console.log('qr',qr);
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`http://ec2-16-171-23-136.eu-north-1.compute.amazonaws.com:3000/api/${companyId}/qr`, { cache: 'no-store' });
+      const res = await fetch(`http://localhost:8080/api/${companyId}/qr`, { cache: 'no-store' });
       console.log('📡 Ответ от сервера:', res);
   
       if (res.status === 202) {
@@ -30,7 +29,7 @@ export default function QrCodeViewer({ companyId }: Props) {
       }
   
       if (!res.ok) {
-        console.log('❗️ Ответ не ok, статус:', res.status);
+        console.log('Ответ не ok, статус:', res.status);
         throw new Error('QR-код не готов');
       }
   
@@ -44,6 +43,8 @@ export default function QrCodeViewer({ companyId }: Props) {
         console.log('⚠️ Неверный формат QR-кода:', data.qr);
         throw new Error('Неверный формат QR-кода');
       }
+
+      pollStatus();
     } catch (err) {
       console.error('🚨 Ошибка в fetchQr:', err);
       setError('Ошибка при получении QR-кода');
@@ -56,37 +57,55 @@ export default function QrCodeViewer({ companyId }: Props) {
   
 
   const handleResetSession = async () => {
-    console.log('🔄 handleResetSession вызван');
     try {
-      const res = await fetch(`http://ec2-16-171-23-136.eu-north-1.compute.amazonaws.com:3000/api/${companyId}/session`, { method: 'DELETE' });
+      const res = await fetch(`http://localhost:8080/api/${companyId}/session`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Ошибка при сбросе сессии');
       await res.json();
   
       setQr(null);
+      setReady(false);
       setError(null);
       setResetStatus('done');
 
     } catch (err) {
-      console.error('❌ Ошибка при сбросе:', err);
+      console.error('Ошибка при сбросе:', err);
       alert('Не удалось сбросить сессию');
     }
   };
 
   async function getStatus() {
     try {
-      const res = await fetch(`http://ec2-16-171-23-136.eu-north-1.compute.amazonaws.com:3000/api/${companyId}/status`, {
+      const res = await fetch(`http://localhost:8080/api/${companyId}/status`, {
         cache: 'no-store',
       });
-  
-      console.log('📡 Ответ от сервера:', res);
   
       const data = await res.json();
       setReady(data.ready);
 
     } catch (err) {
-      console.error('❌ Ошибка при получении статуса:', err);
+      console.error('Ошибка при получении статуса:', err);
     }
   }
+
+  const pollStatus = async () => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/${companyId}/status`, { cache: 'no-store' });
+      const data = await res.json();
+      console.log('📊 Статус клиента:', data);
+  
+      if (data.ready) {
+        setReady(true);
+        console.log('✅ Клиент готов!');
+      } else {
+        console.log('⏳ Клиент еще не готов. Повторная проверка через 3 секунды...');
+        setTimeout(pollStatus, 3000);
+      }
+    } catch (err) {
+      console.error('🚨 Ошибка при получении статуса:', err);
+      setError('Ошибка при получении статуса клиента');
+    }
+  };
+  
 
   useEffect(() => {
     getStatus();
@@ -95,7 +114,7 @@ export default function QrCodeViewer({ companyId }: Props) {
 
   return (
     <div>
-      {!qr && (
+      {!ready && (
         <Button
           variant="contained"
           onClick={fetchQr}
@@ -121,15 +140,21 @@ export default function QrCodeViewer({ companyId }: Props) {
             />
           </>
         )}
-        <Button
-          variant="contained"
-          sx={{ px: 5, ml: 2, color: 'white', mt: 2 }}
-          onClick={handleResetSession}
-        >
-          {resetStatus === 'done' ? 'Сброшено' : 'Сбросить сессию'}
-        </Button>
+        {ready && (
+          <Button
+            variant="contained"
+            sx={{ px: 5, ml: 2, color: 'white', mt: 2 }}
+            onClick={handleResetSession}
+          >
+            {resetStatus === 'done' ? 'Сброшено' : 'Сбросить сессию'}
+          </Button>
+        )}
       </>
-      {ready && <h2>Клиент готов к работе</h2>}
+      {ready ? (
+        <h2>Клиент готов к работе</h2>
+      ) : (
+        <h2>Клиент не готов к работе сканируйте QR-код</h2>
+      )}
       {error && <div style={{ color: 'red' }}> {error}</div>}
     </div>
   );

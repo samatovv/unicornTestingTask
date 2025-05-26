@@ -38,7 +38,6 @@ app.get('*', (req, res, next) => {
   res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
-// Объекты для хранения клиентов, статусов и QR кодов по companyId
 const clients = {};
 const readyStatus = {};
 const qrCodes = {};
@@ -88,7 +87,7 @@ async function startClient(companyId) {
     readyStatus[companyId] = true;
     clientStatus[companyId] = 'ready';
     retryCounts[companyId] = 0;
-    console.log(`✅ WhatsApp клиент для компании ${companyId} готов`);
+    console.log(`WhatsApp клиент для компании ${companyId} готов`);
 
     setInterval(() => {
       if (readyStatus[companyId]) {
@@ -97,7 +96,7 @@ async function startClient(companyId) {
     }, 2000);
 
   } catch (error) {
-    console.error(`❌ Ошибка venom-bot для компании ${companyId}:`, error);
+    console.error(`Ошибка venom-bot для компании ${companyId}:`, error);
     readyStatus[companyId] = false;
     clientStatus[companyId] = 'error';
 
@@ -107,7 +106,7 @@ async function startClient(companyId) {
       await rm(`./tokens/${companyId}`, { recursive: true, force: true }).catch(() => {});
       setTimeout(() => startClient(companyId), retryDelay);
     } else {
-      console.log(`❌ Превышено максимальное число попыток для ${companyId}. Клиент не будет перезапущен автоматически.`);
+      console.log(`Превышено максимальное число попыток для ${companyId}. Клиент не будет перезапущен автоматически.`);
     }
   }
 }
@@ -156,7 +155,6 @@ app.get('/api/:companyId/status', (req, res) => {
 });
 
 
-// API: Сброс сессии и перезапуск клиента компании
 app.delete('/api/:companyId/session', async (req, res) => {
   const companyId = req.params.companyId;
 
@@ -165,7 +163,6 @@ app.delete('/api/:companyId/session', async (req, res) => {
     console.log(`🗑️ Сессия для компании ${companyId} удалена. Перезапускаем клиента...`);
 
     if (clients[companyId]) {
-      // Если есть метод закрытия клиента, его стоит вызвать
       if (clients[companyId].close) {
         await clients[companyId].close();
       }
@@ -184,7 +181,6 @@ app.delete('/api/:companyId/session', async (req, res) => {
   }
 });
 
-// API: Отправка сообщений от имени компании
 app.post('/api/:companyId/send-message', (req, res) => {
   const companyId = req.params.companyId;
 
