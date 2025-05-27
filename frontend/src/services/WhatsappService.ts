@@ -11,7 +11,7 @@ export interface MessagePayload {
     companyId: string,
     messages: MessagePayload[]
   ): Promise<SendMessagesResponse> => {
-    const res = await fetch(`http://localhost:8080/api/${companyId}/send-message`, {
+    const res = await fetch(`http://ec2-16-171-39-119.eu-north-1.compute.amazonaws.com:3000/api/${companyId}/send-message`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages }),
