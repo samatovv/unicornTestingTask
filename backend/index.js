@@ -64,6 +64,7 @@ async function startClient(companyId) {
       session: companyId,
       multidevice: true,
       headless: 'new',
+      executablePath: '/usr/bin/google-chrome',
       logQR: false,
       catchQR: (base64Qrimg, asciiQR) => {
         const cleanedBase64 = base64Qrimg.replace(/^data:image\/png;base64,/, '');
